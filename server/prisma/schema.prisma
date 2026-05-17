@@ -1,0 +1,157 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  PATIENT
+  DOCTOR
+  NURSE
+  AMBULANCE
+  ADMIN
+}
+
+enum RequestStatus {
+  PENDING
+  ACCEPTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum UrgencyLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AppointmentType {
+  HOME_VISIT
+  VIDEO_CALL
+  CLINIC
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  phone     String
+  role      Role     @default(PATIENT)
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  doctorProfile  DoctorProfile?
+  patientProfile PatientProfile?
+
+  sentRequests      MedicalRequest[] @relation("PatientRequests")
+  acceptedRequests  MedicalRequest[] @relation("DoctorRequests")
+
+  patientAppointments  Appointment[] @relation("PatientAppointments")
+  doctorAppointments   Appointment[] @relation("DoctorAppointments")
+
+  medicalReports MedicalReport[]
+  notifications  Notification[]
+}
+
+model DoctorProfile {
+  id            String  @id @default(cuid())
+  userId        String  @unique
+  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  specialization String
+  licenseNumber  String  @unique
+  experience     Int     @default(0)
+  bio            String?
+  isAvailable    Boolean @default(true)
+  latitude       Float?
+  longitude      Float?
+  serviceRadius  Float   @default(10)
+  rating         Float   @default(0)
+  totalReviews   Int     @default(0)
+  consultationFee Float  @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model PatientProfile {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  age              Int?
+  bloodGroup       String?
+  medicalHistory   String?
+  allergies        String?
+  emergencyContact String?
+  emergencyPhone   String?
+  address          String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model MedicalRequest {
+  id           String        @id @default(cuid())
+  patientId    String
+  patient      User          @relation("PatientRequests", fields: [patientId], references: [id])
+  doctorId     String?
+  doctor       User?         @relation("DoctorRequests", fields: [doctorId], references: [id])
+  description  String
+  symptoms     String?
+  latitude     Float
+  longitude    Float
+  address      String?
+  urgencyLevel UrgencyLevel  @default(MEDIUM)
+  status       RequestStatus @default(PENDING)
+  notes        String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Appointment {
+  id          String            @id @default(cuid())
+  patientId   String
+  patient     User              @relation("PatientAppointments", fields: [patientId], references: [id])
+  doctorId    String
+  doctor      User              @relation("DoctorAppointments", fields: [doctorId], references: [id])
+  scheduledAt DateTime
+  type        AppointmentType   @default(HOME_VISIT)
+  status      AppointmentStatus @default(SCHEDULED)
+  symptoms    String?
+  notes       String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+model MedicalReport {
+  id          String   @id @default(cuid())
+  patientId   String
+  patient     User     @relation(fields: [patientId], references: [id])
+  title       String
+  description String?
+  fileUrl     String
+  fileType    String?
+  createdAt   DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   @default("INFO")
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
