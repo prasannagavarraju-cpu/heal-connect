@@ -12,7 +12,6 @@ import PatientAppointments from './pages/patient/Appointments';
 import DoctorDashboard from './pages/doctor/Dashboard';
 import DoctorRequests from './pages/doctor/Requests';
 import DoctorAppointments from './pages/doctor/Appointments';
-import Profile from './pages/Profile';
 import type { JSX } from 'react';
 
 const ProtectedRoute = ({ children, roles }: { children: JSX.Element; roles?: string[] }) => {
@@ -67,10 +66,6 @@ const AppRoutes = () => (
         } />
         <Route path="/doctor/appointments" element={
           <ProtectedRoute roles={['DOCTOR', 'NURSE', 'AMBULANCE']}><DoctorAppointments /></ProtectedRoute>
-        } />
-
-        <Route path="/profile" element={
-          <ProtectedRoute><Profile /></ProtectedRoute>
         } />
 
         <Route path="*" element={<Navigate to="/" replace />} />
